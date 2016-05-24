@@ -22,7 +22,7 @@ metadata {
 		capability "Battery"
 		capability "Configuration"
 
-        fingerprint deviceId: "0x2001", inClusters: "0x30,0x80,0x84,0x71,0x70,0x85,0x86,0x72"
+		fingerprint deviceId: "0x2001", inClusters: "0x30,0x80,0x84,0x71,0x70,0x85,0x86,0x72"
 	}
 
 	simulator {
@@ -30,27 +30,26 @@ metadata {
 		status "wet": "command: 2001, payload: FF"
 	}
 
-	
-tiles {
-		standardTile("water", "device.water", width: 2, height: 2) {
-			state "dry", icon:"st.alarm.water.dry", backgroundColor:"#ffffff"
-			state "wet", icon:"st.alarm.water.wet", backgroundColor:"#53a7c0"
-		}
-		valueTile("battery", "device.battery", inactiveLabel: false, canChangeBackground: true) {
-			state "battery", label:'${currentValue}% Battery', unit:"",
-            backgroundColors:[
-				[value: 19, color: "#BC2323"],
-				[value: 20, color: "#D04E00"],
-				[value: 30, color: "#D04E00"],
-				[value: 40, color: "#DAC400"],
-				[value: 41, color: "#79b821"]
-			]
-		}
-		standardTile("configure", "device.configure", inactiveLabel: false, decoration: "flat") {
-			state "configure", label:'', action:"configuration.configure", icon:"st.secondary.configure"
-		}
-		main "water"
-		details(["water", "battery", "configure"])
+	tiles {
+			standardTile("water", "device.water", width: 2, height: 2) {
+				state "dry", icon:"st.alarm.water.dry", backgroundColor:"#ffffff"
+				state "wet", icon:"st.alarm.water.wet", backgroundColor:"#53a7c0"
+			}
+			valueTile("battery", "device.battery", inactiveLabel: false, canChangeBackground: true) {
+				state "battery", label:'${currentValue}% Battery', unit:"",
+				backgroundColors:[
+					[value: 19, color: "#BC2323"],
+					[value: 20, color: "#D04E00"],
+					[value: 30, color: "#D04E00"],
+					[value: 40, color: "#DAC400"],
+					[value: 41, color: "#79b821"]
+				]
+			}
+			standardTile("configure", "device.configure", inactiveLabel: false, decoration: "flat") {
+				state "configure", label:'', action:"configuration.configure", icon:"st.secondary.configure"
+			}
+			main "water"
+			details(["water", "battery", "configure"])
 	}
 }
 
