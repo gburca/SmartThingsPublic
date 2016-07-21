@@ -53,7 +53,7 @@
 	tiles (scale: 2) {
 		multiAttributeTile(name:"main", type:"generic", width:6, height:4) {
 			tileAttribute("device.temperature", key: "PRIMARY_CONTROL") {
-            	attributeState "temperature",label:'${currentValue}Â°', icon:"st.motion.motion.inactive", backgroundColors:[
+            	attributeState "temperature",label:'${currentValue}°', backgroundColors:[
                 	[value: 32, color: "#153591"],
                     [value: 44, color: "#1e9cbb"],
                     [value: 59, color: "#90d2a7"],
