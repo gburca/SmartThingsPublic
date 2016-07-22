@@ -72,7 +72,7 @@
                 state "inactive",label:'no motion',icon:"st.motion.motion.inactive",backgroundColor:"#ffffff"
 		}
 		valueTile("temperature","device.temperature", width: 2, height: 2) {
-            	state "temperature",label:'${currentValue}Â°',backgroundColors:[
+            	state "temperature",label:'${currentValue}°',backgroundColors:[
                 	[value: 32, color: "#153591"],
                     [value: 44, color: "#1e9cbb"],
                     [value: 59, color: "#90d2a7"],
@@ -135,8 +135,8 @@
 		details([
         	"main",
             "humidity","illuminance", "battery",
-            "motion","tamper", "refresh",
-             "statusText2", "configure", 
+            "motion","tamper", "currentFirmware",
+             "statusText2", "configure", "refresh"
             ])
 	}
 }
@@ -729,8 +729,8 @@ Range: None
 Default: 0
 Note: 
 1. The calibration value = standard value - measure value.
-E.g. If measure value =85.3F and the standard value = 83.2F, so the calibration value = 83.2F - 85.3F = -2.1F.
-If the measure value =60.1F and the standard value = 63.2F, so the calibration value = 63.2F - 60.1â = 3.1F. 
+E.g. If measure value = 85.3F and the standard value = 83.2F, so the calibration value = 83.2F - 85.3F = -2.1F.
+If the measure value = 60.1F and the standard value = 63.2F, so the calibration value = 63.2F - 60.1F = 3.1F. 
     </Help>
   </Value>
   <Value type="byte" byteSize="1" index="303" label="Humidity offset" min="*" max="*" value="">
@@ -739,8 +739,8 @@ Range: None
 Default: 0
 Note:
 The calibration value = standard value - measure value.
-E.g. If measure value = 80RH and the standard value = 75RH, so the calibration value = 75RH â 80RH = -5RH.
-If the measure value = 85RH and the standard value = 90RH, so the calibration value = 90RH â 85RH = 5RH. 
+E.g. If measure value = 80RH and the standard value = 75RH, so the calibration value = 75RH - 80RH = -5RH.
+If the measure value = 85RH and the standard value = 90RH, so the calibration value = 90RH - 85RH = 5RH. 
     </Help>
   </Value>
     <Value type="byte" byteSize="2" index="304" label="Luminance offset" min="*" max="*" value="">
@@ -749,8 +749,8 @@ Range: None
 Default: 0
 Note:
 The calibration value = standard value - measure value.
-E.g. If measure value = 80% Lux and the standard value = 75% Lux, so the calibration value = 75 â 80 = -5.
-If the measure value = 85% Lux and the standard value = 90% Lux, so the calibration value = 90 â 85 = 5.
+E.g. If measure value = 80% Lux and the standard value = 75% Lux, so the calibration value = 75 - 80 = -5.
+If the measure value = 85% Lux and the standard value = 90% Lux, so the calibration value = 90 - 85 = 5.
     </Help>
   </Value>
 </configuration>
