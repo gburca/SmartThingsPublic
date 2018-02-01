@@ -1,13 +1,14 @@
 /**
+ * vim: ts=4
  *
  *  zooZ 4-in-1 Sensor (Advanced)
- *   
+ *
  *	github: Eric Maycock (erocm123)
  *	email: erocmail@gmail.com
  *	Date: 2016-07-09
  *	Copyright Eric Maycock
  *
- *  Code has elements from other community source @CyrilPeponnet (Z-Wave Parameter Sync). Includes all 
+ *  Code has elements from other community source @CyrilPeponnet (Z-Wave Parameter Sync). Includes all
  *  configuration parameters and ease of advanced configuration. Added software based temp, humidity,
  *  and light offsets.
  *
@@ -34,19 +35,19 @@
 		capability "Battery"
         capability "Refresh"
         capability "Tamper Alert"
-        
+
         command "resetBatteryRuntime"
-		
+
         attribute   "needUpdate", "string"
-        
+
         fingerprint deviceId: "0x0701", inClusters: "0x5E,0x86,0x72,0x59,0x85,0x73,0x71,0x84,0x80,0x31,0x70,0x5A,0x98,0x7A"
 	}
     preferences {
-        
+
         input description: "Once you change values on this page, the \"Synced\" Status will become \"Pending\" status. You can then force the sync by clicking the device button or just wait for the next WakeUp (60 minutes).", displayDuringSetup: false, type: "paragraph", element: "paragraph"
-        
+
 		generate_preferences(configuration_model())
-        
+
     }
 	simulator {
 	}
@@ -128,7 +129,7 @@
 			"statusText2", "device.statusText2", decoration: "flat", width: 2, height: 2) {
 			state "statusText2", label:'${currentValue}', unit:"", action:"resetBatteryRuntime"
 		}
-        
+
 		main([
         	"main", "motion"
             ])
@@ -166,7 +167,7 @@ def parse(String description)
 			}
         break
 	}
-    
+
     updateStatus()
 
 	if ( result[0] != null ) { result }
@@ -288,7 +289,7 @@ def zwaveEvent(physicalgraph.zwave.commands.wakeupv1.WakeUpNotification cmd)
     log.debug "Device ${device.displayName} woke up"
 
     def request = sync_properties()
-    
+
     if (!state.lastBatteryReport || (now() - state.lastBatteryReport) / 60000 >= 60 * 24)
     {
         log.debug "Over 24hr since last battery report. Requesting report"
@@ -323,7 +324,7 @@ def refresh() {
             if ( "${it.@setting_type}" == "zwave" ) {
                 request << zwave.configurationV1.configurationGet(parameterNumber: "${it.@index}".toInteger())
             }
-        } 
+        }
         request << zwave.wakeUpV1.wakeUpIntervalGet()
     }
     state.lastRefresh = now()
@@ -345,36 +346,36 @@ def configure() {
 def updated()
 {
     log.debug "updated() is being called"
-    
+
     if (state.realTemperature != null) sendEvent(name:"temperature", value: getAdjustedTemp(state.realTemperature))
     if (state.realHumidity != null) sendEvent(name:"humidity", value: getAdjustedHumidity(state.realHumidity))
     if (state.realLuminance != null) sendEvent(name:"illuminance", value: getAdjustedLuminance(state.realLuminance))
-    
+
     updateStatus()
-    
+
     update_needed_settings()
-    
+
     sendEvent(name:"needUpdate", value: device.currentValue("needUpdate"), displayed:false, isStateChange: true)
 }
 
 def sync_properties()
-{   
+{
     def currentProperties = state.currentProperties ?: [:]
     def configuration = parseXml(configuration_model())
 
     def cmds = []
-    
+
     configuration.Value.each
     {
         if ( "${it.@setting_type}" == "zwave" ) {
             if (! currentProperties."${it.@index}" || currentProperties."${it.@index}" == null)
-            { 
+            {
                 log.debug "Looking for current value of parameter ${it.@index}"
                 cmds << zwave.configurationV1.configurationGet(parameterNumber: it.@index.toInteger())
             }
         }
     }
-    
+
     if (device.currentValue("needUpdate") == "YES") { cmds += update_needed_settings() }
     return cmds
 }
@@ -444,12 +445,12 @@ def update_needed_settings()
 {
     def cmds = []
     def currentProperties = state.currentProperties ?: [:]
-     
+
     def configuration = parseXml(configuration_model())
     def isUpdateNeeded = "NO"
-   
+
     configuration.Value.each
-    {     
+    {
         if ("${it.@setting_type}" == "zwave"){
             if (currentProperties."${it.@index}" == null)
             {
@@ -457,7 +458,7 @@ def update_needed_settings()
                 isUpdateNeeded = "YES"
             }
             else if (settings."${it.@index}" != null && convertParam(it.@index.toInteger(), cmd2Integer(currentProperties."${it.@index}")) != settings."${it.@index}".toInteger())
-            { 
+            {
                 isUpdateNeeded = "YES"
 
                 log.debug "Parameter ${it.@index} will be updated to " + settings."${it.@index}"
@@ -474,7 +475,7 @@ def update_needed_settings()
 /**
 * Convert 1 and 2 bytes values to integer
 */
-def cmd2Integer(array) { 
+def cmd2Integer(array) {
 switch(array.size()) {
 	case 1:
 		array[0]
@@ -517,7 +518,7 @@ private isConfigured() {
 }
 
 private command(physicalgraph.zwave.Command cmd) {
-    
+
 	if (state.sec && cmd.toString()) {
 		zwave.securityV1.securityMessageEncapsulation().encapsulate(cmd).format()
 	} else {
@@ -572,16 +573,16 @@ private getBatteryRuntime() {
    def hours=0
    def mins=0
    def secs=0
-   secs = (currentmillis/1000).toInteger() 
-   mins=(secs/60).toInteger() 
-   hours=(mins/60).toInteger() 
-   days=(hours/24).toInteger() 
-   secs=(secs-(mins*60)).toString().padLeft(2, '0') 
-   mins=(mins-(hours*60)).toString().padLeft(2, '0') 
-   hours=(hours-(days*24)).toString().padLeft(2, '0') 
- 
+   secs = (currentmillis/1000).toInteger()
+   mins=(secs/60).toInteger()
+   hours=(mins/60).toInteger()
+   days=(hours/24).toInteger()
+   secs=(secs-(mins*60)).toString().padLeft(2, '0')
+   mins=(mins-(hours*60)).toString().padLeft(2, '0')
+   hours=(hours-(days*24)).toString().padLeft(2, '0')
 
-  if (days>0) { 
+
+  if (days>0) {
       return "$days days and $hours:$mins:$secs"
   } else {
       return "$hours:$mins:$secs"
@@ -592,12 +593,12 @@ private getRoundedInterval(number) {
     double tempDouble = (number / 60)
     if (tempDouble == tempDouble.round())
        return (tempDouble * 60).toInteger()
-    else 
+    else
        return ((tempDouble.round() + 1) * 60).toInteger()
 }
 
 private getAdjustedTemp(value) {
-    
+
     value = Math.round((value as Double) * 100) / 100
 
 	if (settings."302") {
@@ -605,11 +606,11 @@ private getAdjustedTemp(value) {
 	} else {
        return value
     }
-    
+
 }
 
 private getAdjustedHumidity(value) {
-    
+
     value = Math.round((value as Double) * 100) / 100
 
 	if (settings."303") {
@@ -617,11 +618,11 @@ private getAdjustedHumidity(value) {
 	} else {
        return value
     }
-    
+
 }
 
 private getAdjustedLuminance(value) {
-    
+
     value = Math.round((value as Double) * 100) / 100
 
 	if (settings."304") {
@@ -629,7 +630,7 @@ private getAdjustedLuminance(value) {
 	} else {
        return value
     }
-    
+
 }
 
 def resetBatteryRuntime() {
@@ -659,7 +660,7 @@ private updateStatus(){
         statusText = "RH ${device.currentValue('humidity')}% - "
     if(device.currentValue('illuminance') != null)
         statusText = statusText + "LUX ${device.currentValue('illuminance')} - "
-        
+
     if (statusText != ""){
         statusText = statusText.substring(0, statusText.length() - 2)
         sendEvent(name:"statusText", value: statusText, displayed:false)
@@ -703,7 +704,7 @@ Default: 4
     <Help>
 Range: 1~50
 Default: 1
-Note: 
+Note:
 The amount by which the temperature must change in order for the sensor to send a report. Values are in .10 (tenths) so 1 = .1, 5 = .5, etc.
     </Help>
   </Value>
@@ -727,10 +728,10 @@ The amount by which the luminance must change in order for the sensor to send a 
     <Help>
 Range: None
 Default: 0
-Note: 
+Note:
 1. The calibration value = standard value - measure value.
 E.g. If measure value = 85.3F and the standard value = 83.2F, so the calibration value = 83.2F - 85.3F = -2.1F.
-If the measure value = 60.1F and the standard value = 63.2F, so the calibration value = 63.2F - 60.1F = 3.1F. 
+If the measure value = 60.1F and the standard value = 63.2F, so the calibration value = 63.2F - 60.1F = 3.1F.
     </Help>
   </Value>
   <Value type="byte" byteSize="1" index="303" label="Humidity offset" min="*" max="*" value="">
@@ -740,7 +741,7 @@ Default: 0
 Note:
 The calibration value = standard value - measure value.
 E.g. If measure value = 80RH and the standard value = 75RH, so the calibration value = 75RH - 80RH = -5RH.
-If the measure value = 85RH and the standard value = 90RH, so the calibration value = 90RH - 85RH = 5RH. 
+If the measure value = 85RH and the standard value = 90RH, so the calibration value = 90RH - 85RH = 5RH.
     </Help>
   </Value>
     <Value type="byte" byteSize="2" index="304" label="Luminance offset" min="*" max="*" value="">
