@@ -82,29 +82,31 @@ metadata {
         }
     }
 }
+
 def parse(String description) {
-    //log.debug description
+    log.debug "parse(): description=${description}"
     def result = []
     def cmd = zwave.parse(description)
     if (cmd) {
         result += zwaveEvent(cmd)
-        log.debug "Parsed ${cmd} to ${result.inspect()}"
+        log.debug "parse(): Parsed ${cmd} to ${result.inspect()}"
     } else {
-        log.debug "Non-parsed event: ${description}"
+        log.debug "parse(): Non-parsed event: ${description}"
     }
     
     def now
-    if(location.timeZone)
-    now = new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
-    else
-    now = new Date().format("yyyy MMM dd EEE h:mm:ss a")
+    if(location.timeZone) {
+        now = new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
+    } else {
+        now = new Date().format("yyyy MMM dd EEE h:mm:ss a")
+    }
     sendEvent(name: "lastActivity", value: now, displayed:false)
     
     return result
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicReport cmd, ep = null) {
-    log.debug "BasicReport ${cmd} - ep ${ep}"
+    log.debug "zwaveEvent(BasicReport) cmd: ${cmd} - ep ${ep}"
     if (ep) {
         def event
         childDevices.each {
@@ -132,7 +134,7 @@ def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicReport cmd, ep = null) 
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicSet cmd, ep = null) {
-    log.debug "${cmd}"
+    log.debug "zwaveEvent(BasicSet) cmd: ${cmd} - ep: ${ep}"
 /*    if (ep) {
         def event
         childDevices.each {
@@ -160,13 +162,16 @@ def zwaveEvent(physicalgraph.zwave.commands.basicv1.BasicSet cmd, ep = null) {
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.switchbinaryv1.SwitchBinaryReport cmd, ep = null) {
-    log.debug "SwitchBinaryReport ${cmd} - ep ${ep}"
+    log.debug "zwaveEvent(SwitchBinaryReport) cmd: ${cmd} - ep ${ep}"
     if (ep) {
         def event
         def childDevice = childDevices.find {
             it.deviceNetworkId == "$device.deviceNetworkId-ep$ep"
         }
-        if (childDevice) childDevice.sendEvent(name: "switch", value: cmd.value ? "on" : "off")
+        if (childDevice) {
+        	log.debug "childDevice: ${childDevice}"
+        	childDevice.sendEvent(name: "switch", value: cmd.value ? "on" : "off")
+        }
         if (cmd.value) {
             event = [createEvent([name: "switch", value: "on"])]
         } else {
@@ -192,7 +197,7 @@ def zwaveEvent(physicalgraph.zwave.commands.switchbinaryv1.SwitchBinaryReport cm
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.multichannelv3.MultiChannelCmdEncap cmd) {
-    log.debug "MultiChannelCmdEncap ${cmd}"
+    log.debug "zwaveEvent(MultiChannelCmdEncap) ${cmd}"
     def encapsulatedCommand = cmd.encapsulatedCommand([0x32: 3, 0x25: 1, 0x20: 1])
     if (encapsulatedCommand) {
         zwaveEvent(encapsulatedCommand, cmd.sourceEndPoint as Integer)
@@ -200,7 +205,7 @@ def zwaveEvent(physicalgraph.zwave.commands.multichannelv3.MultiChannelCmdEncap 
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.manufacturerspecificv2.ManufacturerSpecificReport cmd) {
-    log.debug "ManufacturerSpecificReport ${cmd}"
+    log.debug "zwaveEvent(ManufacturerSpecificReport) ${cmd}"
     def msr = String.format("%04X-%04X-%04X", cmd.manufacturerId, cmd.productTypeId, cmd.productId)
     log.debug "msr: $msr"
     updateDataValue("MSR", msr)
@@ -326,7 +331,7 @@ def initialize() {
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.configurationv2.ConfigurationReport cmd) {
-    log.debug "${device.displayName} parameter '${cmd.parameterNumber}' with a byte size of '${cmd.size}' is set to '${cmd.configurationValue}'"
+    log.debug "zwaveEvent(ConfigurationReport): ${device.displayName} parameter '${cmd.parameterNumber}' with a byte size of '${cmd.size}' is set to '${cmd.configurationValue}'"
 }
 
 private encap(cmd, endpoint) {
@@ -355,6 +360,7 @@ private channelNumber(String dni) {
     dni.split("-ep")[-1] as Integer
 }
 private void createChildDevices() {
+    log.debug "createChildDevices()"
     state.oldLabel = device.label
     for (i in 1..2) {
         addChildDevice("Switch Child Device", "${device.deviceNetworkId}-ep${i}", null, [completedSetup: true, label: "${device.displayName} (CH${i})",
@@ -385,7 +391,8 @@ def setAssociationGroup(group, nodes, action, endpoint = null){
     }
 }
 
-def processAssociations(){
+def processAssociations() {
+   log.debug "processAssociations()"
    def cmds = []
    setDefaultAssociations()
    def associationGroups = 5
@@ -420,7 +427,8 @@ def processAssociations(){
    return cmds
 }
 
-void zwaveEvent(physicalgraph.zwave.commands.associationv2.AssociationReport cmd) {
+def zwaveEvent(physicalgraph.zwave.commands.associationv2.AssociationReport cmd) {
+	log.debug "zwaveEvent(AssociationReport) cmd=${cmd}"
     def temp = []
     if (cmd.nodeId != []) {
        cmd.nodeId.each {
@@ -433,13 +441,13 @@ void zwaveEvent(physicalgraph.zwave.commands.associationv2.AssociationReport cmd
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.associationv2.AssociationGroupingsReport cmd) {
-    log.debug "Supported association groups: ${cmd.supportedGroupings}"
+    log.debug "zwaveEvent(AssociationGroupingsReport) Supported association groups: ${cmd.supportedGroupings}"
     state.associationGroups = cmd.supportedGroupings
     createEvent(name: "groups", value: cmd.supportedGroupings)
 }
 
 def zwaveEvent(physicalgraph.zwave.commands.versionv1.VersionReport cmd) {
-    log.debug cmd
+    log.debug "zwaveEvent(VersionReport) cmd=${cmd}"
     if(cmd.applicationVersion && cmd.applicationSubVersion) {
 	    def firmware = "${cmd.applicationVersion}.${cmd.applicationSubVersion.toString().padLeft(2,'0')}"
         state.needfwUpdate = "false"
