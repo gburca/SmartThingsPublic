@@ -41,10 +41,28 @@ metadata {
         fingerprint manufacturer: "0312", prod: "6100", model: "6100", deviceJoinName: "Inovelli 2-Channel Outdoor Smart Plug"
         fingerprint manufacturer: "015D", prod: "0221", model: "611C", deviceJoinName: "Inovelli 2-Channel Outdoor Smart Plug"
         fingerprint manufacturer: "0312", prod: "0221", model: "611C", deviceJoinName: "Inovelli 2-Channel Outdoor Smart Plug"
+        // inClusters = list of command classes supported
         fingerprint deviceId: "0x1101", inClusters: "0x5E,0x25,0x27,0x85,0x8E,0x59,0x55,0x86,0x72,0x5A,0x73,0x70,0x71,0x60,0x6C,0x7A"
     }
     
-    simulator {}
+    simulator {
+    	// When the button on the device is physically pressed, the switch sends us these commands:
+    	status "on":  "command: 2003, payload: FF"
+		status "off": "command: 2003, payload: 00"
+        status "childOn(1)": "command: 600D, payload: 01 00 25 03 00"
+        
+        // This simulates what the device will reply with if it receives the given command from the hub
+        // Ex: if we send the device a 2001FF followed by a delay of 100, and a 2502, the device should respond with "command: 2503..."
+        reply "2001FF,delay 100,2502": "command: 2503, payload: FF"
+		reply "200100,delay 100,2502": "command: 2503, payload: 00"
+        
+        //reply "?": "command: 600D, payload: 0x01,0x00,0x25,0x03,0xFF" // Sw1 on
+        //reply "?": "command: 600D, payload: 0x02,0x00,0x25,0x03,0xFF"	// Sw2 on
+        //command: 600D, payload: 01 00 25 03 00
+        //command: 600D, payload: 01 00 20 01 00
+        //command: 600D, payload: 01 00 20 01 FF
+        //                        ^- switch 01 or 02
+    }
     
     preferences {
         input "autoOff1", "number", title: "Auto Off Channel 1\n\nAutomatically turn switch off after this number of seconds\nRange: 0 to 32767", description: "Tap to set", required: false, range: "0..32767"
@@ -84,6 +102,7 @@ metadata {
 }
 
 def parse(String description) {
+	// Parses events received from the device, and emits 0+ events that SmartThings can understand.
     log.debug "parse(): description=${description}"
     def result = []
     def cmd = zwave.parse(description)
@@ -102,6 +121,7 @@ def parse(String description) {
     }
     sendEvent(name: "lastActivity", value: now, displayed:false)
     
+    // Return events to be fired by the SmartThings platform
     return result
 }
 
@@ -363,9 +383,14 @@ private void createChildDevices() {
     log.debug "createChildDevices()"
     state.oldLabel = device.label
     for (i in 1..2) {
+    	//             String typeName,       String deviceNetworkId,            hubId, Map properties
         addChildDevice("Switch Child Device", "${device.deviceNetworkId}-ep${i}", null, [completedSetup: true, label: "${device.displayName} (CH${i})",
-            isComponent: false, componentName: "ep$i", componentLabel: "Channel $i"
-        ])
+                                                                                         isComponent: false, componentName: "ep$i", componentLabel: "Channel $i"])
+        
+        // String namespace, String typeName, String deviceNetworkId, hubId, Map properties
+        //addChildDevice("erocm123", "Switch Child Device", "${device.deviceNetworkId}-ep${i}", null, [completedSetup: true, label: "${device.displayName} (CH${i})",
+        //    isComponent: false, componentName: "ep$i", componentLabel: "Channel $i"
+        //])
     }
 }
 
