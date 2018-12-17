@@ -43,7 +43,7 @@ void on() {
 
 void off() {
 	log.debug "parent.childOff(${device.deviceNetworkId})"
-    parent.childOff(device.deviceNetworkId)
+	parent.childOff(device.deviceNetworkId)
 }
 
 void refresh() {
