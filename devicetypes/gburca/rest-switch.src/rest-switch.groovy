@@ -1,5 +1,9 @@
 /**
  * Copyright 2019 Gabriel Burca
+ *
+ * See:
+ * https://docs.smartthings.com/en/latest/cloud-and-lan-connected-device-types-developers-guide/building-lan-connected-device-types/building-the-device-type.html
+ * https://docs.smartthings.com/en/latest/ref-docs/hubaction-ref.html
  */
 
 metadata {
