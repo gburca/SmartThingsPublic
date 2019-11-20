@@ -43,13 +43,13 @@ def parse(String description) {
 }
 
 def on() {
-  log.debug("Called on()")
+  //log.debug("Called on()")
   pushButton()
   sendEvent(name: "switch", value: "on", isStateChange: true)
 }
 
 def off() {
-  log.debug("Called off()")
+  //log.debug("Called off()")
   pushButton()
   sendEvent(name: "switch", value: "off", isStateChange: true)
 }
